@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2023 OpenSynergy Indonesia
+     Copyright 2023 PT. Simetri Sinergi Indonesia
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
+<odoo>
+    <record id="bad_debt_module_category" model="ir.module.category">
+        <field name="name">Bad Debt</field>
+    </record>
+
+    <!-- Workflow -->
+    <record id="bad_debt_workflow_module_category" model="ir.module.category">
+        <field name="name">Bad Debt - Workflow</field>
+        <field name="parent_id" ref="bad_debt_module_category" />
+    </record>
+
+    <!-- Configurator -->
+    <record id="bad_debt_configurator_module_category" model="ir.module.category">
+        <field name="name">Bad Debt - Configurator</field>
+        <field name="parent_id" ref="bad_debt_module_category" />
+    </record>
+
+    <!-- Data Ownership -->
+    <record id="bad_debt_data_ownership_module_category" model="ir.module.category">
+        <field name="name">Bad Debt - Data Ownership</field>
+        <field name="parent_id" ref="bad_debt_module_category" />
+    </record>
+
+</odoo>
