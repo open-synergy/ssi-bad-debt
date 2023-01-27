@@ -56,11 +56,9 @@
             />
             <field name="restrict_user" eval="0" />
             <field name="restrict_additional" eval="1" />
-            <field name="additional_python_code">
-                result = False
-                if env.user.id in document.active_approver_user_ids.ids:
-                result = True
-            </field>
+            <field name="additional_python_code">result = False
+if env.user.id in document.active_approver_user_ids.ids:
+    result = True</field>
         </record>
 
         <!-- reject -->
@@ -80,11 +78,9 @@
             />
             <field name="restrict_user" eval="0" />
             <field name="restrict_additional" eval="1" />
-            <field name="additional_python_code">
-                result = False
-                if env.user.id in document.active_approver_user_ids.ids:
-                result = True
-            </field>
+            <field name="additional_python_code">result = False
+if env.user.id in document.active_approver_user_ids.ids:
+    result = True</field>
         </record>
 
         <!-- restart approval -->
@@ -109,11 +105,9 @@
                 eval="[(6,0,[ref('bad_debt_direct_write_off_validator_group')])]"
             />
             <field name="restrict_additional" eval="1" />
-            <field name="additional_python_code">
-                result = False
-                if not document.approval_template_id:
-                result = True
-            </field>
+            <field name="additional_python_code">result = False
+if not document.approval_template_id:
+    result = True</field>
         </record>
 
         <!-- cancel -->

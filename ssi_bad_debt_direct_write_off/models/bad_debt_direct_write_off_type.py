@@ -9,13 +9,19 @@ class BadDebtDirectWriteOffType(models.Model):
     _name = "bad_debt_direct_write_off_type"
     _inherit = ["mixin.master_data"]
 
-    min_days_due = fields.Integer(string="Min Days Due")
-    max_days_due = fields.Integer(string="Max Days Due")
+    min_days_due = fields.Integer(
+        string="Min Days Due",
+    )
+    max_days_due = fields.Integer(
+        string="Max Days Due",
+    )
     journal_id = fields.Many2one(
         string="Journal", comodel_name="account.journal", ondelete="restrict"
     )
     expense_account_id = fields.Many2one(
-        string="Expense Account", comodel_name="account.account", ondelete="restrict"
+        string="Expense Account",
+        comodel_name="account.account",
+        ondelete="restrict",
     )
     allowed_account_ids = fields.Many2many(
         string="Allowed Accounts",

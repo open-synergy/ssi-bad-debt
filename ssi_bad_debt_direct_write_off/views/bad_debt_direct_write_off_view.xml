@@ -10,6 +10,7 @@
             name="inherit_id"
             ref="ssi_transaction_mixin.mixin_transaction_view_tree"
         />
+        <field name="mode">primary</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='user_id']" position="after">
                 <field name="partner_id" widget="many2one_avatar" />
@@ -26,6 +27,7 @@
             name="inherit_id"
             ref="ssi_transaction_mixin.mixin_transaction_view_form"
         />
+        <field name="mode">primary</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='user_id']" position="after">
                 <field name="partner_id" />
@@ -33,9 +35,25 @@
             </xpath>
             <xpath expr="//group[@name='header_right']" position="inside">
                 <field name="date" />
+                <field name="journal_id" />
+                <field name="expense_account_id" />
+                <field name="move_id" />
             </xpath>
             <xpath expr="//page[@name='note']" position="before">
                 <page name="page_detail" string="Details">
+                    <group>
+                        <button
+                            name="action_populate"
+                            string="Populate"
+                            type="object"
+                            confirm="Populate Datas. Are you sure?"
+                            order="1"
+                            class="oe_highlight"
+                            attrs="{'invisible':[('state','&lt;&gt;', 'draft')]}"
+                            colspan="2"
+                            icon="fa-cogs"
+                        />
+                    </group>
                     <field name="detail_ids" />
                 </page>
             </xpath>
