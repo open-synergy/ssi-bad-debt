@@ -16,7 +16,10 @@ class BadDebtDirectWriteOff(models.Model):
         "mixin.company_currency",
     ]
 
-    date = fields.Date(string="Date", required=True)
+    date = fields.Date(
+        string="Date",
+        required=True,
+    )
     type_id = fields.Many2one(
         string="Type",
         comodel_name="bad_debt_direct_write_off_type",
@@ -41,7 +44,11 @@ class BadDebtDirectWriteOff(models.Model):
         required=True,
         ondelete="restrict",
     )
-    move_id = fields.Many2one(string="Move", comodel_name="account.move", readonly=True)
+    move_id = fields.Many2one(
+        string="Move",
+        comodel_name="account.move",
+        readonly=True,
+    )
     detail_ids = fields.One2many(
         string="Detail",
         comodel_name="bad_debt_direct_write_off.detail",
@@ -135,14 +142,14 @@ class BadDebtDirectWriteOff(models.Model):
         self.ensure_one()
         return [
             ("partner_id", "=", self.partner_id.id),
-            ("day_due", ">=", self.type_id.min_days_due),
-            ("day_due", "<=", self.type_id.max_date_due),
+            ("days_overdue", ">=", self.type_id.min_days_due),
+            ("days_overdue", "<=", self.type_id.max_days_due),
             ("full_reconcile_id", "=", False),
             ("account_id", "in", self.type_id.allowed_account_ids.ids),
         ]
 
     def _prepare_detail_data(self, move_line_id):
-        self.ensure_on()
+        self.ensure_one()
         return {"bad_debt_id": self.id, "source_move_line_id": move_line_id}
 
     def action_populate(self):
@@ -152,9 +159,9 @@ class BadDebtDirectWriteOff(models.Model):
         obj_detail = self.env["bad_debt_direct_write_off.detail"].with_context(
             check_move_validity=False
         )
-        for record in self:
+        for record in self.sudo():
+            record.detail_ids.unlink()
             move_line_ids = obj_move_line.search(record._prepare_move_line_criteria())
-
             if move_line_ids:
                 for move_line in move_line_ids:
                     obj_detail.create(record._prepare_detail_data(move_line.id))
@@ -188,6 +195,7 @@ class BadDebtDirectWriteOff(models.Model):
         for line in self.detail_ids:
             line._create_account_move_line()
         self.move_id.action_post()
+        return True
 
     def _create_account_move(self):
         self.ensure_one()

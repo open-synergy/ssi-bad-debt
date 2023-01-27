@@ -13,6 +13,10 @@
     "depends": [
         "ssi_financial_accounting",
         "ssi_account_move_line_day_overdue",
+        "ssi_master_data_mixin",
+        "ssi_transaction_confirm_mixin",
+        "ssi_transaction_done_mixin",
+        "ssi_transaction_cancel_mixin",
         "ssi_company_currency_mixin",
     ],
     "data": [
