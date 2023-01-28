@@ -53,13 +53,13 @@ class BadDebtDirectWriteOffDetail(models.Model):
         string="# Receivable Move Line",
         comodel_name="account.move.line",
         readonly=True,
-        ondelete="restrict",
+        ondelete="set null",
     )
     expense_move_line_id = fields.Many2one(
         string="# Expense Move Line",
         comodel_name="account.move.line",
         readonly=True,
-        ondelete="restrict",
+        ondelete="set null",
     )
 
     @api.onchange("source_move_line_id")
@@ -73,3 +73,52 @@ class BadDebtDirectWriteOffDetail(models.Model):
             self.amount_residual_currency = (
                 self.source_move_line_id.amount_residual_currency
             )
+
+    def _create_account_move_line(self):
+        self.ensure_one()
+        ML = self.env["account.move.line"].with_context(check_move_validity=False)
+        expense_line = ML.create(self._prepare_expense_move_line_data())
+        receivable_line = ML.create(self._prepare_receivable_move_line_data())
+        self.write(
+            {
+                "expense_move_line_id": expense_line.id,
+                "receivable_move_line_id": receivable_line.id,
+            }
+        )
+
+    def _prepare_expense_move_line_data(self):
+        self.ensure_one()
+        name = "Bad debt %s" % (self.source_move_line_id.move_id.name)
+        data = {
+            "move_id": self.bad_debt_id.move_id.id,
+            "account_id": self.bad_debt_id.expense_account_id.id,
+            "name": name,
+            "debit": self.amount_residual,
+            "credit": 0,
+            "currency_id": self.source_move_line_id.currency_id.id,
+            "amount_currency": self.amount_residual_currency,
+        }
+        return data
+
+    def _prepare_receivable_move_line_data(self):
+        self.ensure_one()
+        name = "Bad debt %s" % (self.source_move_line_id.move_id.name)
+        data = {
+            "move_id": self.bad_debt_id.move_id.id,
+            "account_id": self.source_move_line_id.account_id.id,
+            "name": name,
+            "credit": self.amount_residual,
+            "debit": 0,
+            "currency_id": self.source_move_line_id.currency_id.id,
+            "amount_currency": self.amount_residual_currency,
+        }
+        return data
+
+    def _reconcile(self):
+        self.ensure_one()
+        moves = self.source_move_line_id + self.receivable_move_line_id
+        moves.reconcile()
+
+    def _unreconcile(self):
+        moves = self.source_move_line_id + self.receivable_move_line_id
+        moves.remove_move_reconcile()
