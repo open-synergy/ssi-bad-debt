@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2022 OpenSynergy Indonesia
+     Copyright 2022 PT. Simetri Sinergi Indonesia
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
+<odoo>
+<record
+        id="bad_debt_direct_write_off_type_demo1"
+        model="bad_debt_direct_write_off_type"
+    >
+    <field name="name">Normal - (test)</field>
+    <field name="code">X001</field>
+    <field name="journal_id" ref="demo_journal1" />
+    <field name="expense_account_id" ref="demo_account1" />
+    <field
+            name="allowed_account_ids"
+            eval="[(6, 0, [ref('l10n_generic_coa.1_receivable')])]"
+        />
+</record>
+
+
+</odoo>

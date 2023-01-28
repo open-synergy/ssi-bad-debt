@@ -9,8 +9,14 @@ class BadDebtDirectWriteOffType(models.Model):
     _name = "bad_debt_direct_write_off_type"
     _inherit = ["mixin.master_data"]
 
+    use_min_days_due = fields.Boolean(
+        string="Use Min Days Due",
+    )
     min_days_due = fields.Integer(
         string="Min Days Due",
+    )
+    use_max_days_due = fields.Boolean(
+        string="Use Max Days Due",
     )
     max_days_due = fields.Integer(
         string="Max Days Due",

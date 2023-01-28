@@ -53,6 +53,7 @@ class BadDebtDirectWriteOff(models.Model):
         string="Detail",
         comodel_name="bad_debt_direct_write_off.detail",
         inverse_name="bad_debt_id",
+        readonly=True,
     )
     state = fields.Selection(
         string="State",
@@ -140,31 +141,51 @@ class BadDebtDirectWriteOff(models.Model):
 
     def _prepare_move_line_criteria(self):
         self.ensure_one()
-        return [
+        result = [
             ("partner_id", "=", self.partner_id.id),
-            ("days_overdue", ">=", self.type_id.min_days_due),
-            ("days_overdue", "<=", self.type_id.max_days_due),
             ("full_reconcile_id", "=", False),
             ("account_id", "in", self.type_id.allowed_account_ids.ids),
         ]
 
-    def _prepare_detail_data(self, move_line_id):
+        if not self.type_id.use_min_days_due and not self.type_id.use_max_days_due:
+            result += [
+                ("days_overdue", ">", 0),
+            ]
+
+        if self.type_id.use_min_days_due:
+            result += [
+                ("days_overdue", ">=", self.type_id.min_days_due),
+            ]
+
+        if self.type_id.use_max_days_due:
+            result += [
+                ("days_overdue", "<=", self.type_id.max_days_due),
+            ]
+
+        return result
+
+    def _prepare_detail_data(self, move_line):
         self.ensure_one()
-        return {"bad_debt_id": self.id, "source_move_line_id": move_line_id}
+        return {
+            "bad_debt_id": self.id,
+            "source_move_line_id": move_line.id,
+            "amount_residual": move_line.amount_residual,
+            "amount_residual_currency": move_line.amount_residual_currency,
+        }
 
     def action_populate(self):
-        obj_move_line = self.env["account.move.line"].with_context(
-            check_move_validity=False
-        )
-        obj_detail = self.env["bad_debt_direct_write_off.detail"].with_context(
-            check_move_validity=False
-        )
-        for record in self.sudo():
-            record.detail_ids.unlink()
-            move_line_ids = obj_move_line.search(record._prepare_move_line_criteria())
-            if move_line_ids:
-                for move_line in move_line_ids:
-                    obj_detail.create(record._prepare_detail_data(move_line.id))
+        for record in self:
+            record._populate()
+
+    def _populate(self):
+        self.ensure_one()
+        self.detail_ids.unlink()
+        ML = self.env["account.move.line"]
+        Detail = self.env["bad_debt_direct_write_off.detail"]
+        lines = ML.search(self._prepare_move_line_criteria())
+        if len(lines) > 0:
+            for line in lines:
+                Detail.create(self._prepare_detail_data(line))
 
     def _prepare_account_move_data(self):
         self.ensure_one()
@@ -175,45 +196,40 @@ class BadDebtDirectWriteOff(models.Model):
         }
         return data
 
-    def _prepare_expense_move_line_data(self):
-        self.ensure_one()
-        data = {
-            "move_id": self.bad_debt_id.move_id,
-            "account_id": self.bad_debt_id.expense_account_id.id,
-            "name": self.source_move_line_id.move_id.name,
-            "debit": self.amount_residual,
-            "credit": 0,
-            "currency_id": self.source_move_line_id.currency_id.id,
-            "amount_currency": self.amount_residual_currency,
-        }
-        return data
-
     @ssi_decorator.post_done_action()
     def _create_accounting_entry(self):
         self.ensure_one()
         self._create_account_move()
-        for line in self.detail_ids:
-            line._create_account_move_line()
-        self.move_id.action_post()
+
         return True
 
     def _create_account_move(self):
         self.ensure_one()
-        if not self.move_id:
-            obj_account_move = self.env["account.move"].with_context(
-                check_move_validity=False
-            )
-            move = obj_account_move.create(self._prepare_account_move_data())
-            self.move_id = move
+        if self.move_id:
+            return True
 
-    def _create_account_move_line(self):
-        self.ensure_one()
-        obj_line = self.env["account.move.line"].with_context(check_move_validity=False)
-        line = obj_line.create(self._prepare_expense_move_line_data())
-        self.expense_move_line_id = line
+        Move = self.env["account.move"].with_context(check_move_validity=False)
+        move = Move.create(self._prepare_account_move_data())
+        self.write({"move_id": move.id})
+        for line in self.detail_ids:
+            line._create_account_move_line()
+
+        move.action_post()
+
+        for line in self.detail_ids:
+            line._reconcile()
 
     @ssi_decorator.post_cancel_action()
     def _delete_accounting_entry(self):
         self.ensure_one()
+        if not self.move_id:
+            return True
+
+        if self.move_id.state == "posted":
+            self.move_id.button_cancel()
+
+        for detail in self.detail_ids:
+            detail._unreconcile()
+
         if self.move_id:
             self.move_id.unlink()

@@ -5,7 +5,10 @@
 <odoo>
     <record id="bad_debt_direct_write_off_type_group" model="res.groups">
         <field name="name">Bad Debt Type</field>
-        <field name="category_id" ref="bad_debt_configurator_module_category" />
+        <field
+            name="category_id"
+            ref="ssi_financial_accounting.financial_accounting_configurator_module_category"
+        />
         <field
             name="users"
             eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"
@@ -15,12 +18,18 @@
     <!-- Workflow -->
     <record id="bad_debt_direct_write_off_viewer_group" model="res.groups">
         <field name="name">Viewer</field>
-        <field name="category_id" ref="bad_debt_workflow_module_category" />
+        <field
+            name="category_id"
+            ref="ssi_financial_accounting.financial_accounting_module_category"
+        />
     </record>
 
     <record id="bad_debt_direct_write_off_user_group" model="res.groups">
         <field name="name">User</field>
-        <field name="category_id" ref="bad_debt_workflow_module_category" />
+        <field
+            name="category_id"
+            ref="ssi_financial_accounting.financial_accounting_module_category"
+        />
         <field
             name="implied_ids"
             eval="[(4, ref('bad_debt_direct_write_off_viewer_group'))]"
@@ -29,7 +38,10 @@
 
     <record id="bad_debt_direct_write_off_validator_group" model="res.groups">
         <field name="name">Validator</field>
-        <field name="category_id" ref="bad_debt_workflow_module_category" />
+        <field
+            name="category_id"
+            ref="ssi_financial_accounting.financial_accounting_module_category"
+        />
         <field
             name="implied_ids"
             eval="[(4, ref('bad_debt_direct_write_off_user_group'))]"
@@ -43,18 +55,27 @@
     <!-- Data Ownership -->
     <record id="bad_debt_company_group" model="res.groups">
         <field name="name">Company</field>
-        <field name="category_id" ref="bad_debt_data_ownership_module_category" />
+        <field
+            name="category_id"
+            ref="ssi_financial_accounting.financial_accounting_data_ownership_module_category"
+        />
     </record>
 
     <record id="bad_debt_company_child_group" model="res.groups">
         <field name="name">Company and All Child Companies</field>
-        <field name="category_id" ref="bad_debt_data_ownership_module_category" />
+        <field
+            name="category_id"
+            ref="ssi_financial_accounting.financial_accounting_data_ownership_module_category"
+        />
         <field name="implied_ids" eval="[(4, ref('bad_debt_company_group'))]" />
     </record>
 
     <record id="bad_debt_all_group" model="res.groups">
         <field name="name">All</field>
-        <field name="category_id" ref="bad_debt_data_ownership_module_category" />
+        <field
+            name="category_id"
+            ref="ssi_financial_accounting.financial_accounting_data_ownership_module_category"
+        />
         <field name="implied_ids" eval="[(4, ref('bad_debt_company_child_group'))]" />
         <field
             name="users"
