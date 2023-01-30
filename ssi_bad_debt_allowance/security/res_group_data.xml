@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2023 OpenSynergy Indonesia
+     Copyright 2023 PT. Simetri Sinergi Indonesia
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
+<odoo>
+    <record id="bad_debt_allowance_type_group" model="res.groups">
+        <field name="name">Bad Debt Type</field>
+        <field
+            name="category_id"
+            ref="bad_debt_allowance_configurator_module_category"
+        />
+        <field
+            name="users"
+            eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"
+        />
+    </record>
+
+    <record id="bad_debt_allowance_type_percentage_group" model="res.groups">
+        <field name="name">Bad Debt Type Percentage</field>
+        <field
+            name="category_id"
+            ref="bad_debt_allowance_configurator_module_category"
+        />
+        <field
+            name="users"
+            eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"
+        />
+    </record>
+
+    <!-- Workflow -->
+    <record id="bad_debt_allowance_viewer_group" model="res.groups">
+        <field name="name">Viewer</field>
+        <field name="category_id" ref="bad_debt_allowance_workflow_module_category" />
+    </record>
+
+    <record id="bad_debt_allowance_user_group" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="bad_debt_allowance_workflow_module_category" />
+        <field
+            name="implied_ids"
+            eval="[(4, ref('bad_debt_allowance_viewer_group'))]"
+        />
+    </record>
+
+    <record id="bad_debt_allowance_validator_group" model="res.groups">
+        <field name="name">Validator</field>
+        <field name="category_id" ref="bad_debt_allowance_workflow_module_category" />
+        <field name="implied_ids" eval="[(4, ref('bad_debt_allowance_user_group'))]" />
+        <field
+            name="users"
+            eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"
+        />
+    </record>
+
+    <!-- Data Ownership -->
+    <record id="bad_debt_allowance_company_group" model="res.groups">
+        <field name="name">Company</field>
+        <field
+            name="category_id"
+            ref="bad_debt_allowance_data_ownership_module_category"
+        />
+    </record>
+
+    <record id="bad_debt_allowance_company_child_group" model="res.groups">
+        <field name="name">Company and All Child Companies</field>
+        <field
+            name="category_id"
+            ref="bad_debt_allowance_data_ownership_module_category"
+        />
+        <field
+            name="implied_ids"
+            eval="[(4, ref('bad_debt_allowance_company_group'))]"
+        />
+    </record>
+
+    <record id="bad_debt_allowance_all_group" model="res.groups">
+        <field name="name">All</field>
+        <field
+            name="category_id"
+            ref="bad_debt_allowance_data_ownership_module_category"
+        />
+        <field
+            name="implied_ids"
+            eval="[(4, ref('bad_debt_allowance_company_child_group'))]"
+        />
+        <field
+            name="users"
+            eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"
+        />
+    </record>
+</odoo>
