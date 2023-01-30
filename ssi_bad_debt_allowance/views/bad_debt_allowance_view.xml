@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--Copyright 2023 OpenSynergy Indonesia-->
+<!--Copyright 2023 PT. Simetri Sinergi Indonesia-->
+<!--License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).-->
+<odoo>
+    <record id="bad_debt_allowance_view_tree" model="ir.ui.view">
+        <field name="name">bad_debt_allowance - Tree</field>
+        <field name="model">bad_debt_allowance</field>
+        <field
+            name="inherit_id"
+            ref="ssi_transaction_mixin.mixin_transaction_view_tree"
+        />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data />
+        </field>
+    </record>
+
+    <record id="bad_debt_allowance_view_search" model="ir.ui.view">
+        <field name="name">bad_debt_allowance - Search</field>
+        <field name="model">bad_debt_allowance</field>
+        <field
+            name="inherit_id"
+            ref="ssi_transaction_mixin.mixin_transaction_view_search"
+        />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data />
+        </field>
+    </record>
+
+    <record id="bad_debt_allowance_view_form" model="ir.ui.view">
+        <field name="name">bad_debt_allowance - Form</field>
+        <field name="model">bad_debt_allowance</field>
+        <field
+            name="inherit_id"
+            ref="ssi_transaction_mixin.mixin_transaction_view_form"
+        />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="partner_id" domain="[('parent_id','=',False)]" />
+                    <field name="type_id" />
+                </xpath>
+                <xpath expr="//group[@name='header_right']" position="inside">
+                    <field name="date" />
+                </xpath>
+                <xpath expr="//page[last()]" position="before">
+                    <page name="receivable" string="Receivable">
+                        <group>
+                            <button
+                                name="action_populate"
+                                string="Populate"
+                                type="object"
+                                confirm="Populate Datas. Are you sure?"
+                                order="1"
+                                class="oe_highlight"
+                                attrs="{'invisible':[('state','!=', 'draft')]}"
+                                colspan="2"
+                                icon="fa-gears"
+                            />
+                        </group>
+                        <field name="detail_ids">
+                            <tree>
+                                <field name="source_move_line_id" />
+                                <field name="date" />
+                                <field name="date_due" />
+                                <field name="days_overdue" />
+                                <field name="amount" />
+                                <field name="amount_currency" optional="hide" />
+                                <field name="amount_residual" />
+                                <field
+                                    name="amount_residual_currency"
+                                    optional="hide"
+                                />
+                                <field name="allowance_percentage" />
+                                <field name="amount_allowance" />
+                                <field
+                                    name="amount_allowance_currency"
+                                    optional="hide"
+                                />
+                            </tree>
+                            <form>
+                                <group name="form_receivable" colspan="4" col="2">
+                                    <group name="form_receivable1" colspan="1" col="2">
+                                        <field name="source_move_line_id" />
+                                        <field name="date" />
+                                        <field name="date_due" />
+                                        <field name="days_overdue" />
+                                    </group>
+                                    <group name="form_receivable2" colspan="1" col="2">
+                                        <field name="amount" />
+                                        <field name="amount_currency" optional="hide" />
+                                        <field name="amount_residual" />
+                                        <field
+                                            name="amount_residual_currency"
+                                            optional="hide"
+                                        />
+                                        <field name="allowance_percentage" />
+                                        <field name="amount_allowance" />
+                                        <field
+                                            name="amount_allowance_currency"
+                                            optional="hide"
+                                        />
+                                    </group>
+                                    <group name="form_receivable3" colspan="1" col="2">
+                                        <field name="allowance_move_line_id" />
+                                        <field name="expense_move_line_id" />
+                                    </group>
+                                </group>
+                            </form>
+                        </field>
+                    </page>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <record id="bad_debt_allowance_action" model="ir.actions.act_window">
+        <field name="name">Bad Debt Allowances</field>
+        <field name="res_model">bad_debt_allowance</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Bad Debt Allowance
+            </p>
+        </field>
+    </record>
+
+
+    <menuitem
+        id="bad_debt_allowance_menu"
+        name="Bad Debt Allowances"
+        parent="ssi_financial_accounting.menu_account_receivable"
+        groups="bad_debt_allowance_viewer_group"
+        action="bad_debt_allowance_action"
+        sequence="70"
+    />
+</odoo>
