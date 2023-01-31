@@ -15,7 +15,7 @@
     </record>
 
     <record id="bad_debt_allowance_company_rule" model="ir.rule">
-        <field name="name">Bad Deb - Responsible to company data</field>
+        <field name="name">Bad Debt - Responsible to company data</field>
         <field name="model_id" ref="model_bad_debt_allowance" />
         <field name="groups" eval="[(4, ref('bad_debt_allowance_company_group'))]" />
         <field name="domain_force">[('company_id','=',user.company_id.id)]</field>
@@ -28,7 +28,7 @@
     <record id="bad_debt_allowance_company_child_rule" model="ir.rule">
         <field
             name="name"
-        >Bad Deb - Responsible to company and all child companies data</field>
+        >Bad Debt - Responsible to company and all child companies data</field>
         <field name="model_id" ref="model_bad_debt_allowance" />
         <field
             name="groups"
@@ -42,7 +42,7 @@
     </record>
 
     <record id="bad_debt_allowance_all_rule" model="ir.rule">
-        <field name="name">Bad Deb - Responsible to all data</field>
+        <field name="name">Bad Debt - Responsible to all data</field>
         <field name="model_id" ref="model_bad_debt_allowance" />
         <field name="groups" eval="[(4, ref('bad_debt_allowance_all_group'))]" />
         <field name="domain_force">[(1,'=',1)]</field>
