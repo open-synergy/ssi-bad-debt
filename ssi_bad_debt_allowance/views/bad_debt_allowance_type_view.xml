@@ -38,9 +38,11 @@
         />
         <field name="mode">primary</field>
         <field name="arch" type="xml">
-            <form>
+            <data>
                 <xpath expr="//field[@name='active']" position="after">
+                    <field name="use_min_days_due" />
                     <field name="min_days_due" />
+                    <field name="use_max_days_due" />
                     <field name="max_days_due" />
                 </xpath>
                 <xpath expr="//page[last()]" position="before">
@@ -59,7 +61,7 @@
                         </field>
                     </page>
                 </xpath>
-            </form>
+            </data>
         </field>
     </record>
 

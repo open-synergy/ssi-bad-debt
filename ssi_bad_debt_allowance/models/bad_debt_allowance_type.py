@@ -31,3 +31,9 @@ class BadDebtAllowanceType(models.Model):
         comodel_name="bad_debt_allowance_type.percentage",
         inverse_name="type_id",
     )
+    use_min_days_due = fields.Boolean(
+        string="Use Min Days Due",
+    )
+    use_max_days_due = fields.Boolean(
+        string="Use Max Days Due",
+    )

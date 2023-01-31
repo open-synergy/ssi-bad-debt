@@ -16,6 +16,52 @@ class BadDebtAllowance(models.Model):
         "mixin.company_currency",
     ]
 
+    # Multiple Approval Attribute
+    _approval_from_state = "draft"
+    _approval_to_state = "done"
+    _approval_state = "confirm"
+    _after_approved_method = "action_done"
+
+    # Attributes related to add element on view automatically
+    _automatically_insert_view_element = True
+    _automatically_insert_multiple_approval_page = True
+    _automatically_insert_done_button = False
+    _automatically_insert_done_policy_fields = False
+
+    _statusbar_visible_label = "draft,confirm,done"
+
+    _policy_field_order = [
+        "confirm_ok",
+        "approve_ok",
+        "reject_ok",
+        "restart_approval_ok",
+        "cancel_ok",
+        "restart_ok",
+        "done_ok",
+        "manual_number_ok",
+    ]
+
+    _header_button_order = [
+        "action_confirm",
+        "action_approve_approval",
+        "action_reject_approval",
+        "action_done",
+        "%(ssi_transaction_cancel_mixin.base_select_cancel_reason_action)d",
+        "action_restart",
+    ]
+
+    # Attributes related to add element on search view automatically
+    _state_filter_order = [
+        "dom_draft",
+        "dom_confirm",
+        "dom_reject",
+        "dom_done",
+        "dom_cancel",
+    ]
+
+    # Sequence attribute
+    _create_sequence_state = "done"
+
     date = fields.Date(
         string="Date",
         required=True,
@@ -71,52 +117,6 @@ class BadDebtAllowance(models.Model):
             ("reject", "Rejected"),
         ],
     )
-
-    # Multiple Approval Attribute
-    _approval_from_state = "draft"
-    _approval_to_state = "done"
-    _approval_state = "confirm"
-    _after_approved_method = "action_done"
-
-    # Attributes related to add element on view automatically
-    _automatically_insert_view_element = True
-    _automatically_insert_multiple_approval_page = True
-    _automatically_insert_done_button = False
-    _automatically_insert_done_policy_fields = False
-
-    _statusbar_visible_label = "draft,confirm,done"
-
-    _policy_field_order = [
-        "confirm_ok",
-        "approve_ok",
-        "reject_ok",
-        "restart_approval_ok",
-        "cancel_ok",
-        "restart_ok",
-        "done_ok",
-        "manual_number_ok",
-    ]
-
-    _header_button_order = [
-        "action_confirm",
-        "action_approve_approval",
-        "action_reject_approval",
-        "action_done",
-        "%(ssi_transaction_cancel_mixin.base_select_cancel_reason_action)d",
-        "action_restart",
-    ]
-
-    # Attributes related to add element on search view automatically
-    _state_filter_order = [
-        "dom_draft",
-        "dom_confirm",
-        "dom_reject",
-        "dom_done",
-        "dom_cancel",
-    ]
-
-    # Sequence attribute
-    _create_sequence_state = "done"
 
     @api.model
     def _get_policy_field(self):

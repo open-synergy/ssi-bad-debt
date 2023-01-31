@@ -38,7 +38,7 @@
         />
         <field name="mode">primary</field>
         <field name="arch" type="xml">
-            <form>
+            <data>
                 <xpath expr="//field[@name='user_id']" position="after">
                     <field name="partner_id" domain="[('parent_id','=',False)]" />
                     <field name="type_id" />
@@ -46,7 +46,7 @@
                 <xpath expr="//group[@name='header_right']" position="inside">
                     <field name="date" />
                 </xpath>
-                <xpath expr="//page[first()]" position="before">
+                <xpath expr="//page[last()]" position="before">
                     <page name="receivable" string="Receivable">
                         <group>
                             <button
@@ -113,7 +113,7 @@
                         </field>
                     </page>
                 </xpath>
-            </form>
+            </data>
         </field>
     </record>
 
