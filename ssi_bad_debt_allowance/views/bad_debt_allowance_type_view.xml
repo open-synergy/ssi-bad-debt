@@ -30,7 +30,7 @@
     </record>
 
     <record id="bad_debt_allowance_type_view_form" model="ir.ui.view">
-        <field name="name">bad_debt_allowance_type_Form</field>
+        <field name="name">bad_debt_allowance_type - Form</field>
         <field name="model">bad_debt_allowance_type</field>
         <field
             name="inherit_id"
