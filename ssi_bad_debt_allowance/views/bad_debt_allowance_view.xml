@@ -48,17 +48,19 @@
                 </xpath>
                 <xpath expr="//page[last()]" position="before">
                     <page name="receivable" string="Receivable">
-                        <button
-                            name="action_populate"
-                            string="Populate"
-                            type="object"
-                            confirm="Populate Datas. Are you sure?"
-                            order="1"
-                            class="oe_highlight"
-                            attrs="{'invisible':[('state','!=', 'draft')]}"
-                            colspan="2"
-                            icon="fa-gears"
-                        />
+                        <group>
+                            <button
+                                name="action_populate"
+                                string="Populate"
+                                type="object"
+                                confirm="Populate Datas. Are you sure?"
+                                order="1"
+                                class="oe_highlight"
+                                attrs="{'invisible':[('state','!=', 'draft')]}"
+                                colspan="2"
+                                icon="fa-gears"
+                            />
+                        </group>
                         <field name="detail_ids">
                             <tree>
                                 <field name="source_move_line_id" />
