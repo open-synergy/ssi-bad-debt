@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bad_debt_direct_write_off_type_user,bad_debt_direct_write_off_type – user,model_bad_debt_direct_write_off_type,base.group_user,1,1,1,1
+access_bad_debt_direct_write_off_type_all,bad_debt_direct_write_off_type - all,model_bad_debt_direct_write_off_type,,1,0,0,0
+access_bad_debt_direct_write_off_user,bad_debt_direct_write_off - user,model_bad_debt_direct_write_off,base.group_user,1,1,1,1
+access_bad_debt_direct_write_off_all,bad_debt_direct_write_off - all,model_bad_debt_direct_write_off,,1,0,0,0
+access_bad_debt_direct_write_off_detail_user,bad_debt_direct_write_off.detail - user,model_bad_debt_direct_write_off_detail,base.group_user,1,1,1,1
+access_bad_debt_direct_write_off_detail_all,bad_debt_direct_write_off.detail - all,model_bad_debt_direct_write_off_detail,,1,0,0,0
