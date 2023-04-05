@@ -46,7 +46,7 @@
                 <xpath expr="//group[@name='header_right']" position="inside">
                     <field name="date" />
                 </xpath>
-                <xpath expr="//page[last()]" position="before">
+                <xpath expr="//page[1]" position="before">
                     <page name="receivable" string="Receivable">
                         <group>
                             <button
@@ -64,22 +64,18 @@
                         <field name="detail_ids">
                             <tree>
                                 <field name="source_move_line_id" />
+                                <field name="company_currency_id" invisible="1" />
+                                <field name="currency_id" invisible="1" />
                                 <field name="date" />
                                 <field name="date_due" />
                                 <field name="days_overdue" />
-                                <field name="amount" />
-                                <field name="amount_currency" optional="hide" />
-                                <field name="amount_residual" />
-                                <field
-                                    name="amount_residual_currency"
-                                    optional="hide"
-                                />
+                                <field name="amount" optional="hide" />
+                                <field name="amount_currency" />
+                                <field name="amount_residual" optional="hide" />
+                                <field name="amount_residual_currency" />
                                 <field name="allowance_percentage" />
-                                <field name="amount_allowance" />
-                                <field
-                                    name="amount_allowance_currency"
-                                    optional="hide"
-                                />
+                                <field name="amount_allowance" optional="hide" />
+                                <field name="amount_allowance_currency" />
                             </tree>
                             <form>
                                 <group name="form_receivable" colspan="4" col="2">
@@ -111,6 +107,14 @@
                                 </group>
                             </form>
                         </field>
+                    </page>
+                    <page name="accounting" string="Accounting">
+                        <group name="accounting_1" colspan="4" col="2">
+                            <field name="journal_id" />
+                            <field name="allowance_account_id" />
+                            <field name="expense_account_id" />
+                            <field name="move_id" />
+                        </group>
                     </page>
                 </xpath>
             </data>

@@ -7,6 +7,7 @@ from odoo import fields, models
 
 class BadDebtAllowanceTypePercentage(models.Model):
     _name = "bad_debt_allowance_type.percentage"
+    _description = "Bad Debt Allowance Type Percentage"
 
     type_id = fields.Many2one(
         string="Type",

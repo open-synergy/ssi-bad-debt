@@ -2,13 +2,12 @@
 # Copyright 2023 PT. Simetri Sinergi Indonesia
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
-from odoo import api, fields, models
-
-from odoo.addons.ssi_decorator import ssi_decorator
+from odoo import _, api, fields, models
 
 
 class BadDebtAllowanceDetail(models.Model):
     _name = "bad_debt_allowance.detail"
+    _description = "Bad Debt Allowance Detail"
 
     bad_debt_id = fields.Many2one(
         string="# Bad Debt",
@@ -31,7 +30,14 @@ class BadDebtAllowanceDetail(models.Model):
     )
     days_overdue = fields.Integer(string="Days Over Due", readonly=True)
     company_currency_id = fields.Many2one(
-        string="Company Currency", related="source_move_line_id.company_currency_id"
+        string="Company Currency",
+        related="bad_debt_id.company_id.currency_id",
+        store=True,
+    )
+    currency_id = fields.Many2one(
+        string="Currency",
+        related="source_move_line_id.currency_id",
+        store=True,
     )
     amount = fields.Monetary(
         string="Amount",
@@ -40,7 +46,7 @@ class BadDebtAllowanceDetail(models.Model):
     )
     amount_currency = fields.Monetary(
         string="Amount Currency",
-        currency_field="company_currency_id",
+        currency_field="currency_id",
         related="source_move_line_id.amount_currency",
         store=True,
     )
@@ -49,7 +55,7 @@ class BadDebtAllowanceDetail(models.Model):
     )
     amount_residual_currency = fields.Monetary(
         string="Amount Residual Currency",
-        currency_field="company_currency_id",
+        currency_field="currency_id",
         readonly=True,
     )
     allowance_percentage = fields.Float(string="Allowance Percentage", required=True)
@@ -61,7 +67,7 @@ class BadDebtAllowanceDetail(models.Model):
     )
     amount_allowance_currency = fields.Monetary(
         string="Amount Allowance Currency",
-        currency_field="company_currency_id",
+        currency_field="currency_id",
         compute="_compute_allowance",
         store=True,
     )
@@ -69,13 +75,13 @@ class BadDebtAllowanceDetail(models.Model):
         string="Allowance Move Line",
         comodel_name="account.move.line",
         readonly=True,
-        ondelete="restrict",
+        ondelete="set null",
     )
     expense_move_line_id = fields.Many2one(
         string="# Expense Move Line",
         comodel_name="account.move.line",
         readonly=True,
-        ondelete="restrict",
+        ondelete="set null",
     )
 
     @api.onchange("source_move_line_id")
@@ -127,38 +133,48 @@ class BadDebtAllowanceDetail(models.Model):
 
     def _prepare_allowance_move(self, move):
         self.ensure_one()
+        name = _("Bad Debt Allowance for %s" % self.source_move_line_id.move_id.name)
+        account = self.bad_debt_id.allowance_account_id
         result = {
             "move_id": move.id,
-            "name": "Bad Debt Allowance for ${self.source_move_line_id.move_id.name}",
-            "account_id": self.allowance_account_id.id,
+            "name": name,
+            "account_id": account.id,
             "debit": 0.0,
             "credit": self.amount_allowance,
-            "currency_id": self.company_currency_id.id,
+            "currency_id": self.currency_id.id,
             "amount_currency": self.amount_allowance_currency,
         }
         return result
 
     def _prepare_expense_move(self, move):
         self.ensure_one()
+        name = _("Bad Debt Allowance for %s" % self.source_move_line_id.move_id.name)
+        account = self.bad_debt_id.expense_account_id
         result = {
             "move_id": move.id,
-            "name": "Bad Debt Allowance for ${self.source_move_line_id.move_id.name}",
-            "account_id": self.expense_account_id.id,
+            "name": name,
+            "account_id": account.id,
             "credit": 0.0,
             "debit": self.amount_allowance,
-            "currency_id": self.company_currency_id.id,
+            "currency_id": self.currency_id.id,
             "amount_currency": self.amount_allowance_currency,
         }
         return result
 
-    @ssi_decorator.post_done_action()
     def _create_accounting_entry(self, move):
         self.ensure_one()
-        allowance_move_line = self.env["account.move.line"].create(
-            self._prepare_allowance_move(move)
+        context = {
+            "check_move_validity": False,
+        }
+        allowance_move_line = (
+            self.env["account.move.line"]
+            .with_context(context)
+            .create(self._prepare_allowance_move(move))
         )
-        expense_move_line = self.env["account.move.line"].create(
-            self._prepare_expense_move(move)
+        expense_move_line = (
+            self.env["account.move.line"]
+            .with_context(context)
+            .create(self._prepare_expense_move(move))
         )
         self.write(
             {
@@ -166,11 +182,3 @@ class BadDebtAllowanceDetail(models.Model):
                 "expense_move_line_id": expense_move_line.id,
             }
         )
-
-    def _reconcile(self):
-        moves = self.source_move_line_id + self.allowance_move_line_id
-        moves.reconcile()
-
-    def _unreconcile(self):
-        moves = self.source_move_line_id + self.allowance_move_line_id
-        moves.remove_move_reconcile()

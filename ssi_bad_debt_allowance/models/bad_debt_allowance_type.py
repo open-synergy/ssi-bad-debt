@@ -7,6 +7,7 @@ from odoo import fields, models
 
 class BadDebtAllowanceType(models.Model):
     _name = "bad_debt_allowance_type"
+    _description = "Bad Debt Allowance Type"
     _inherit = ["mixin.master_data"]
 
     min_days_due = fields.Integer(string="Min Days Due", required=True)
@@ -16,6 +17,11 @@ class BadDebtAllowanceType(models.Model):
     )
     allowance_account_id = fields.Many2one(
         string="Allowance Account",
+        comodel_name="account.account",
+        ondelete="restrict",
+    )
+    expense_account_id = fields.Many2one(
+        string="Expense Account",
         comodel_name="account.account",
         ondelete="restrict",
     )

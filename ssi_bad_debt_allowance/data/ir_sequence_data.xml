@@ -7,7 +7,7 @@
         <record id="bad_debt_allowance_sequence" model="ir.sequence">
             <field name="name">Bad Debt Allowance</field>
             <field name="code">bad_debt_allowance</field>
-            <field name="prefix">BAD-DEBT-ALW/%(range_year)s/</field>
+            <field name="prefix">BDA/%(range_year)s/</field>
             <field eval="1" name="number_next" />
             <field eval="1" name="number_increment" />
             <field name="padding" eval="6" />

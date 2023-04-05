@@ -2,13 +2,15 @@
 # Copyright 2023 PT. Simetri Sinergi Indonesia
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 from odoo.addons.ssi_decorator import ssi_decorator
 
 
 class BadDebtAllowance(models.Model):
     _name = "bad_debt_allowance"
+    _description = "Bad Debt Allowance"
     _inherit = [
         "mixin.transaction_confirm",
         "mixin.transaction_done",
@@ -179,12 +181,31 @@ class BadDebtAllowance(models.Model):
 
     def _prepare_detail_data(self, move_line):
         self.ensure_one()
+        percentage = self._get_allowance_percentage(move_line)
         return {
             "bad_debt_id": self.id,
             "source_move_line_id": move_line.id,
+            "days_overdue": move_line.days_overdue,
             "amount_residual": move_line.amount_residual,
             "amount_residual_currency": move_line.amount_residual_currency,
+            "allowance_percentage": percentage,
         }
+
+    def _get_allowance_percentage(self, move_line):
+        self.ensure_one()
+        Percentage = self.env["bad_debt_allowance_type.percentage"]
+        criteria = [
+            ("type_id", "=", self.type_id.id),
+            ("min_day_overdue", "<=", move_line.days_overdue),
+            ("max_day_overdue", ">=", move_line.days_overdue),
+        ]
+        percentages = Percentage.search(criteria)
+
+        if len(percentages) == 0:
+            err_msg = _("No percentage configuration found")
+            raise UserError(err_msg)
+
+        return percentages[0].percentage
 
     def action_populate(self):
         for record in self:
@@ -195,6 +216,7 @@ class BadDebtAllowance(models.Model):
         self.detail_ids.unlink()
         ML = self.env["account.move.line"]
         Detail = self.env["bad_debt_allowance.detail"]
+        self.detail_ids.unlink()
         lines = ML.search(self._prepare_move_line_criteria())
         if len(lines) > 0:
             for line in lines:
@@ -218,10 +240,9 @@ class BadDebtAllowance(models.Model):
         for detail in self.detail_ids:
             detail._create_accounting_entry(move)
 
-        self.write({"move_id": move.id})
+        move.action_post()
 
-        for detail in self.detail_ids:
-            detail._reconcile()
+        self.write({"move_id": move.id})
 
     @ssi_decorator.post_cancel_action()
     def _delete_accounting_entry(self):
@@ -229,10 +250,7 @@ class BadDebtAllowance(models.Model):
         if not self.move_id:
             return True
 
-        for detail in self.detail_ids:
-            detail._unreconcile()
-
         if self.move_id:
-            self.move_id.unlink()
+            self.move_id.with_context(force_delete=True).unlink()
 
         self.write({"move_id": False})
