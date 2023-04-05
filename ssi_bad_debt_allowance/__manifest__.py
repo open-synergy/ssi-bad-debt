@@ -28,6 +28,7 @@
         "data/sequence_template_data.xml",
         "data/policy_template_data.xml",
         "data/approval_template_data.xml",
+        "data/account_journal_data.xml",
         "views/bad_debt_allowance_type_view.xml",
         "views/bad_debt_allowance_view.xml",
     ],
