@@ -11,6 +11,8 @@
                 <field name="source_move_line_id" />
                 <field name="date" />
                 <field name="date_due" />
+                <field name="currency_id" invisible="1" />
+                <field name="company_currency_id" invisible="1" />
                 <field name="amount" />
                 <field name="amount_currency" />
                 <field name="amount_residual" />

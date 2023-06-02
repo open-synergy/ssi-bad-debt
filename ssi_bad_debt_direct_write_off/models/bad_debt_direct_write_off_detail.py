@@ -7,6 +7,7 @@ from odoo import api, fields, models
 
 class BadDebtDirectWriteOffDetail(models.Model):
     _name = "bad_debt_direct_write_off.detail"
+    _description = "Bad Debt Write Off Detail"
 
     bad_debt_id = fields.Many2one(
         string="# Bad Debt",
@@ -29,6 +30,11 @@ class BadDebtDirectWriteOffDetail(models.Model):
     )
     company_currency_id = fields.Many2one(
         string="Company Currency", related="source_move_line_id.company_currency_id"
+    )
+    currency_id = fields.Many2one(
+        string="Currency",
+        compute="_compute_currency_id",
+        store=True,
     )
     amount = fields.Monetary(
         string="Amount",
@@ -62,6 +68,18 @@ class BadDebtDirectWriteOffDetail(models.Model):
         ondelete="set null",
     )
 
+    @api.depends(
+        "source_move_line_id",
+        "source_move_line_id.currency_id",
+        "source_move_line_id.company_currency_id",
+    )
+    def _compute_currency_id(self):
+        for record in self:
+            result = record.source_move_line_id.company_currency_id.id
+            if record.source_move_line_id.currency_id:
+                result = record.source_move_line_id.currency_id.id
+            record.currency_id = result
+
     @api.onchange("source_move_line_id")
     def onchange_amount_residual(self):
         if self.source_move_line_id:
@@ -94,7 +112,7 @@ class BadDebtDirectWriteOffDetail(models.Model):
             "account_id": self.bad_debt_id.expense_account_id.id,
             "name": name,
             "debit": self.amount_residual,
-            "credit": 0,
+            "credit": 0.0,
             "currency_id": self.source_move_line_id.currency_id.id,
             "amount_currency": self.amount_residual_currency,
         }
@@ -108,7 +126,7 @@ class BadDebtDirectWriteOffDetail(models.Model):
             "account_id": self.source_move_line_id.account_id.id,
             "name": name,
             "credit": self.amount_residual,
-            "debit": 0,
+            "debit": 0.0,
             "currency_id": self.source_move_line_id.currency_id.id,
             "amount_currency": self.amount_residual_currency,
         }

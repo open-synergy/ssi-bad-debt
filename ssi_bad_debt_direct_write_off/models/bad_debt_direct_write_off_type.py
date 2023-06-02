@@ -7,6 +7,7 @@ from odoo import fields, models
 
 class BadDebtDirectWriteOffType(models.Model):
     _name = "bad_debt_direct_write_off_type"
+    _description = "Bad Debt Write Type"
     _inherit = ["mixin.master_data"]
 
     use_min_days_due = fields.Boolean(
