@@ -66,7 +66,7 @@
     <menuitem
         id="bad_debt_direct_write_off_type_menu"
         name="Bad Debt Direct Write Off Types"
-        parent="account.menu_finance_receivables_master_data"
+        parent="account.account_management_menu"
         action="bad_debt_direct_write_off_type_action"
     />
 </odoo>

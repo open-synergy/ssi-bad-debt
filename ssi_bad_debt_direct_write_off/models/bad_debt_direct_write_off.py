@@ -6,6 +6,7 @@ from odoo import api, fields, models
 
 class BadDebtDirectWriteOff(models.Model):
     _name = "bad_debt_direct_write_off"
+    _description = "Bad Debt Write Off"
     _inherit = [
         "mixin.transaction_confirm",
         "mixin.transaction_done",
@@ -112,7 +113,7 @@ class BadDebtDirectWriteOff(models.Model):
 
     @api.model
     def _get_policy_field(self):
-        res = super(BadDebtDirectWriteOff, self)._get_policy_field()
+        res = super()._get_policy_field()
         policy_field = [
             "confirm_ok",
             "approve_ok",
@@ -202,7 +203,7 @@ class BadDebtDirectWriteOff(models.Model):
 
     @api.multi
     def action_confirm(self):
-        _super = super(BadDebtDirectWriteOff, self)
+        _super = super()
         res = _super.action_confirm()
         for document in self:
             document._create_account_move()
@@ -210,7 +211,7 @@ class BadDebtDirectWriteOff(models.Model):
 
     @api.multi
     def action_cancel(self, cancel_reason_id):
-        _super = super(BadDebtDirectWriteOff, self)
+        _super = super()
         res = _super.action_cancel(cancel_reason_id)
         for document in self:
             if not document.move_id:
@@ -244,7 +245,7 @@ class BadDebtDirectWriteOff(models.Model):
 
     @api.model
     def create(self, vals):
-        _super = super(BadDebtDirectWriteOff, self)
+        _super = super()
         res = _super.create(vals)
         if not res.policy_template_id:
             res.onchange_policy_template_id()
