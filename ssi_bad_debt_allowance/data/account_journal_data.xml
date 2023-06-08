@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2023 OpenSynergy Indonesia
+     Copyright 2023 PT. Simetri Sinergi Indonesia
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
+<odoo>
+<record id="data_bad_debt_allowance_journal" model="account.journal">
+    <field name="name">Bad Debt Allowance</field>
+    <field name="code">BDA</field>
+    <field name="type">general</field>
+</record>
+
+</odoo>
