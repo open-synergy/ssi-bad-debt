@@ -69,13 +69,14 @@
                                 <field name="date" />
                                 <field name="date_due" />
                                 <field name="days_overdue" />
-                                <field name="amount" optional="hide" />
-                                <field name="amount_currency" />
-                                <field name="amount_residual" optional="hide" />
-                                <field name="amount_residual_currency" />
+                                <field name="amount" />
+                                <field name="amount_currency" invisible="1" />
+                                <field name="amount_residual" />
+                                <field name="amount_residual_currency" invisible="1" />
                                 <field name="allowance_percentage" />
-                                <field name="amount_allowance" optional="hide" />
-                                <field name="amount_allowance_currency" />
+                                <field name="amount_allowance" />
+                                <field name="amount_allowance_currency" invisible="1" />
+                                <field name="amount_2b_allowance" />
                             </tree>
                             <form>
                                 <group name="form_receivable" colspan="4" col="2">
@@ -99,6 +100,7 @@
                                             name="amount_allowance_currency"
                                             optional="hide"
                                         />
+                                        <field name="amount_2b_allowance" />
                                     </group>
                                     <group name="form_receivable3" colspan="1" col="2">
                                         <field name="allowance_move_line_id" />

@@ -262,12 +262,9 @@ class BadDebtAllowance(models.Model):
         move = Move.create(self._prepare_account_move_data())
         self.write({"move_id": move.id})
         for line in self.detail_ids:
-            line._create_account_move_line()
+            line._create_accounting_entry(move)
 
         move.post()
-
-        for line in self.detail_ids:
-            line._reconcile()
 
     @api.multi
     def action_cancel(self, cancel_reason_id):
@@ -279,9 +276,6 @@ class BadDebtAllowance(models.Model):
 
             if document.move_id.state == "posted":
                 document.move_id.button_cancel()
-
-            for detail in document.detail_ids:
-                detail._unreconcile()
 
             if document.move_id:
                 document.move_id.unlink()
