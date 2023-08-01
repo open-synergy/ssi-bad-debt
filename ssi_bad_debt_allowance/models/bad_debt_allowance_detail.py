@@ -47,7 +47,8 @@ class BadDebtAllowanceDetail(models.Model):
     )
     currency_id = fields.Many2one(
         string="Currency",
-        related="source_move_line_id.currency_id",
+        comodel_name="res.currency",
+        compute="_compute_currency_id",
         store=True,
     )
     amount = fields.Monetary(
@@ -87,6 +88,12 @@ class BadDebtAllowanceDetail(models.Model):
         compute="_compute_allowance",
         store=True,
     )
+    amount_2b_allowance = fields.Monetary(
+        string="Amount To Be Allowance",
+        currency_field="company_currency_id",
+        compute="_compute_allowance",
+        store=True,
+    )
     allowance_move_line_id = fields.Many2one(
         string="Allowance Move Line",
         comodel_name="account.move.line",
@@ -99,6 +106,18 @@ class BadDebtAllowanceDetail(models.Model):
         readonly=True,
         ondelete="set null",
     )
+
+    @api.depends(
+        "source_move_line_id",
+        "source_move_line_id.currency_id",
+        "source_move_line_id.company_currency_id",
+    )
+    def _compute_currency_id(self):
+        for record in self:
+            result = record.source_move_line_id.company_currency_id.id
+            if record.source_move_line_id.currency_id:
+                result = record.source_move_line_id.currency_id.id
+            record.currency_id = result
 
     @api.onchange(
         "source_move_line_id",
@@ -159,6 +178,9 @@ class BadDebtAllowanceDetail(models.Model):
             record.amount_allowance_currency = (
                 record.allowance_percentage / 100.00
             ) * record.amount_residual_currency
+            record.amount_2b_allowance = (
+                record.amount_allowance - record.source_move_line_id.amount_allowance
+            )
 
     @api.multi
     def _prepare_allowance_move(self, move):
@@ -170,9 +192,10 @@ class BadDebtAllowanceDetail(models.Model):
             "name": name,
             "account_id": account.id,
             "debit": 0.0,
-            "credit": self.amount_allowance,
+            "credit": self.amount_2b_allowance,
             "currency_id": self.currency_id.id,
             "amount_currency": self.amount_allowance_currency,
+            "partner_id": move.partner_id and move.partner_id.id or False,
         }
         return result
 
@@ -186,9 +209,10 @@ class BadDebtAllowanceDetail(models.Model):
             "name": name,
             "account_id": account.id,
             "credit": 0.0,
-            "debit": self.amount_allowance,
+            "debit": self.amount_2b_allowance,
             "currency_id": self.currency_id.id,
             "amount_currency": self.amount_allowance_currency,
+            "partner_id": move.partner_id and move.partner_id.id or False,
         }
         return result
 
@@ -214,3 +238,12 @@ class BadDebtAllowanceDetail(models.Model):
                 "expense_move_line_id": expense_move_line.id,
             }
         )
+
+    def _reconcile(self):
+        self.ensure_one()
+        moves = self.source_move_line_id + self.allowance_move_line_id
+        moves.reconcile()
+
+    def _unreconcile(self):
+        moves = self.source_move_line_id + self.allowance_move_line_id
+        moves.remove_move_reconcile()

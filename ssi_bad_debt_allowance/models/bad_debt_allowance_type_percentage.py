@@ -15,6 +15,6 @@ class BadDebtAllowanceTypePercentage(models.Model):
         required=True,
         ondelete="cascade",
     )
-    min_day_overdue = fields.Float(string="Min Day Overdue", required=True)
-    max_day_overdue = fields.Float(string="Max Day Overdue", required=True)
+    min_day_overdue = fields.Integer(string="Min Day Overdue", required=True)
+    max_day_overdue = fields.Integer(string="Max Day Overdue", required=True)
     percentage = fields.Float(string="Percentage", required=True)

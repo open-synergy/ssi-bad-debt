@@ -7,4 +7,5 @@ from . import (
     bad_debt_allowance_detail,
     bad_debt_allowance_type,
     bad_debt_allowance_type_percentage,
+    account_move_line,
 )
