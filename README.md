@@ -19,7 +19,7 @@ Available addons
 addon | version | maintainers | summary
 --- | --- | --- | ---
 [ssi_bad_debt_allowance](ssi_bad_debt_allowance/) | 14.0.1.0.1 |  | Bad Debt Allowance
-[ssi_bad_debt_direct_write_off](ssi_bad_debt_direct_write_off/) | 14.0.1.0.1 |  | Bad Debt Direct Write Off
+[ssi_bad_debt_direct_write_off](ssi_bad_debt_direct_write_off/) | 14.0.1.1.0 |  | Bad Debt Direct Write Off
 
 [//]: # (end addons)
 
