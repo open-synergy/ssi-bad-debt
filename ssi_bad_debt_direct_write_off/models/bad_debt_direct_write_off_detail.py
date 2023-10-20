@@ -7,6 +7,7 @@ from odoo import api, fields, models
 
 class BadDebtDirectWriteOffDetail(models.Model):
     _name = "bad_debt_direct_write_off.detail"
+    _description = "Bad Debt Write Off - Detail"
 
     bad_debt_id = fields.Many2one(
         string="# Bad Debt",

@@ -9,6 +9,7 @@ from odoo.addons.ssi_decorator import ssi_decorator
 
 class BadDebtDirectWriteOff(models.Model):
     _name = "bad_debt_direct_write_off"
+    _description = "Bad Debt Write Off"
     _inherit = [
         "mixin.transaction_confirm",
         "mixin.transaction_done",
