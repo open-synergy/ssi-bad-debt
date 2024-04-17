@@ -4,7 +4,7 @@
 
 {
     "name": "Bad Debt Direct Write Off",
-    "version": "11.0.1.0.0",
+    "version": "11.0.2.0.0",
     "category": "Accounting",
     "website": "https://simetri-sinergi.id",
     "author": "PT. Simetri Sinergi Indonesia, OpenSynergy Indonesia",
@@ -17,6 +17,7 @@
         "ssi_transaction_done_mixin",
         "ssi_transaction_cancel_mixin",
         "ssi_company_currency_mixin",
+        "account_move_line_latest_reconcilliation_date",
     ],
     "data": [
         "security/ir.model.access.csv",

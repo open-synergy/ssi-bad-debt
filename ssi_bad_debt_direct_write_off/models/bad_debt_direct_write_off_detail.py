@@ -21,6 +21,12 @@ class BadDebtDirectWriteOffDetail(models.Model):
         required=True,
         ondelete="restrict",
     )
+    partner_id = fields.Many2one(
+        string="Partner",
+        comodel_name="res.partner",
+        related="source_move_line_id.partner_id",
+        store=True,
+    )
     date = fields.Date(string="Date", related="source_move_line_id.date", store=True)
     date_due = fields.Date(
         string="Date Due", related="source_move_line_id.date_maturity", store=True
@@ -33,8 +39,10 @@ class BadDebtDirectWriteOffDetail(models.Model):
     )
     currency_id = fields.Many2one(
         string="Currency",
+        comodel_name="res.currency",
         compute="_compute_currency_id",
         store=True,
+        related=False,
     )
     amount = fields.Monetary(
         string="Amount",
@@ -44,16 +52,21 @@ class BadDebtDirectWriteOffDetail(models.Model):
     amount_currency = fields.Monetary(
         string="Amount Currency",
         currency_field="company_currency_id",
-        related="source_move_line_id.amount_currency",
+        compute="_compute_amount_currency",
+        related=False,
         store=True,
     )
     amount_residual = fields.Monetary(
-        string="Amount Residual", currency_field="company_currency_id", readonly=True
+        string="Amount Residual",
+        currency_field="company_currency_id",
+        readonly=True,
+        related=False,
     )
     amount_residual_currency = fields.Monetary(
         string="Amount Residual Currency",
         currency_field="company_currency_id",
         readonly=True,
+        related=False,
     )
     receivable_move_line_id = fields.Many2one(
         string="# Receivable Move Line",
@@ -67,6 +80,19 @@ class BadDebtDirectWriteOffDetail(models.Model):
         readonly=True,
         ondelete="set null",
     )
+
+    @api.depends(
+        "source_move_line_id",
+    )
+    def _compute_amount_currency(self):
+        for record in self:
+            result = 0.0
+            if record.source_move_line_id:
+                ml = record.source_move_line_id
+                result = ml.balance
+                if ml.currency_id:
+                    result = ml.amount_residual_currency
+            record.amount_currency = result
 
     @api.depends(
         "source_move_line_id",
@@ -107,29 +133,41 @@ class BadDebtDirectWriteOffDetail(models.Model):
     def _prepare_expense_move_line_data(self):
         self.ensure_one()
         name = "Bad debt %s" % (self.source_move_line_id.move_id.name)
+        currency = self.source_move_line_id.currency_id
         data = {
             "move_id": self.bad_debt_id.move_id.id,
             "account_id": self.bad_debt_id.expense_account_id.id,
             "name": name,
             "debit": self.amount_residual,
             "credit": 0.0,
-            "currency_id": self.source_move_line_id.currency_id.id,
-            "amount_currency": self.amount_residual_currency,
         }
+        if currency:
+            data.update(
+                {
+                    "currency_id": currency,
+                    "amount_currency": self.amount_residual_currency,
+                }
+            )
         return data
 
     def _prepare_receivable_move_line_data(self):
         self.ensure_one()
         name = "Bad debt %s" % (self.source_move_line_id.move_id.name)
+        currency = self.source_move_line_id.currency_id
         data = {
             "move_id": self.bad_debt_id.move_id.id,
             "account_id": self.source_move_line_id.account_id.id,
             "name": name,
             "credit": self.amount_residual,
             "debit": 0.0,
-            "currency_id": self.source_move_line_id.currency_id.id,
-            "amount_currency": self.amount_residual_currency,
         }
+        if currency:
+            data.update(
+                {
+                    "currency_id": currency,
+                    "amount_currency": self.amount_residual_currency,
+                }
+            )
         return data
 
     def _reconcile(self):

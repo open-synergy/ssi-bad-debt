@@ -1,6 +1,8 @@
 # Copyright 2023 OpenSynergy Indonesia
 # Copyright 2023 PT. Simetri Sinergi Indonesia
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
+from datetime import date, datetime
+
 from odoo import api, fields, models
 
 
@@ -63,30 +65,60 @@ class BadDebtDirectWriteOff(models.Model):
     date = fields.Date(
         string="Date",
         required=True,
+        readonly=True,
+        states={
+            "draft": [
+                ("readonly", False),
+            ],
+        },
     )
     type_id = fields.Many2one(
         string="Type",
         comodel_name="bad_debt_direct_write_off_type",
         required=True,
         ondelete="restrict",
+        readonly=True,
+        states={
+            "draft": [
+                ("readonly", False),
+            ],
+        },
     )
     partner_id = fields.Many2one(
         string="Partner",
         comodel_name="res.partner",
-        required=True,
+        required=False,
         ondelete="restrict",
+        readonly=True,
+        states={
+            "draft": [
+                ("readonly", False),
+            ],
+        },
     )
     journal_id = fields.Many2one(
         string="Journal",
         comodel_name="account.journal",
         required=True,
         ondelete="restrict",
+        readonly=True,
+        states={
+            "draft": [
+                ("readonly", False),
+            ],
+        },
     )
     expense_account_id = fields.Many2one(
         string="Expense Account",
         comodel_name="account.account",
         required=True,
         ondelete="restrict",
+        readonly=True,
+        states={
+            "draft": [
+                ("readonly", False),
+            ],
+        },
     )
     move_id = fields.Many2one(
         string="Move",
@@ -98,6 +130,11 @@ class BadDebtDirectWriteOff(models.Model):
         comodel_name="bad_debt_direct_write_off.detail",
         inverse_name="bad_debt_id",
         readonly=True,
+        states={
+            "draft": [
+                ("readonly", False),
+            ],
+        },
     )
     state = fields.Selection(
         string="State",
@@ -146,11 +183,18 @@ class BadDebtDirectWriteOff(models.Model):
 
     def _prepare_move_line_criteria(self):
         self.ensure_one()
+        days_diff = (
+            datetime.strptime(self.date, "%Y-%m-%d").date() - date.today()
+        ).days
         result = [
-            ("partner_id", "=", self.partner_id.id),
             ("full_reconcile_id", "=", False),
             ("account_id", "in", self.type_id.allowed_account_ids.ids),
         ]
+
+        if self.partner_id:
+            result += [
+                ("partner_id", "=", self.partner_id.id),
+            ]
 
         if not self.type_id.use_min_days_due and not self.type_id.use_max_days_due:
             result += [
@@ -159,23 +203,32 @@ class BadDebtDirectWriteOff(models.Model):
 
         if self.type_id.use_min_days_due:
             result += [
-                ("days_overdue", ">=", self.type_id.min_days_due),
+                ("days_overdue", ">", self.type_id.min_days_due - days_diff),
             ]
 
         if self.type_id.use_max_days_due:
             result += [
-                ("days_overdue", "<=", self.type_id.max_days_due),
+                ("days_overdue", "<", self.type_id.max_days_due - days_diff),
             ]
+
+        result += [
+            "|",
+            ("latest_reconciliation_date", "<=", self.date),
+            ("latest_reconciliation_date", "=", False),
+        ]
 
         return result
 
     def _prepare_detail_data(self, move_line):
         self.ensure_one()
+        amount_residual_currency = move_line.amount_residual_currency
+        if not move_line.currency_id:
+            amount_residual_currency = move_line.amount_residual
         return {
             "bad_debt_id": self.id,
             "source_move_line_id": move_line.id,
             "amount_residual": move_line.amount_residual,
-            "amount_residual_currency": move_line.amount_residual_currency,
+            "amount_residual_currency": amount_residual_currency,
         }
 
     def action_populate(self):
@@ -202,9 +255,9 @@ class BadDebtDirectWriteOff(models.Model):
         return data
 
     @api.multi
-    def action_confirm(self):
+    def action_done(self):
         _super = super()
-        res = _super.action_confirm()
+        res = _super.action_done()
         for document in self:
             document._create_account_move()
         return res

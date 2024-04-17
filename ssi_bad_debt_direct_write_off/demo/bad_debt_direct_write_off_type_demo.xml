@@ -11,10 +11,10 @@
     <field name="code">X001</field>
     <field name="journal_id" ref="demo_journal1" />
     <field name="expense_account_id" ref="demo_account1" />
-    <field
+    <!-- <field
             name="allowed_account_ids"
             eval="[(6, 0, [ref('l10n_generic_coa.conf_a_recv')])]"
-        />
+        /> -->
 </record>
 
 
