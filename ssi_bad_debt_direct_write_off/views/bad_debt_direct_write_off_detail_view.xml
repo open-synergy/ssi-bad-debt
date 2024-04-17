@@ -7,8 +7,9 @@
         <field name="name">bad_debt_direct_write_off.detail - Tree</field>
         <field name="model">bad_debt_direct_write_off.detail</field>
         <field name="arch" type="xml">
-            <tree editable="bottom">
+            <tree create="0" edit="0">
                 <field name="source_move_line_id" />
+                <field name="partner_id" />
                 <field name="date" />
                 <field name="date_due" />
                 <field name="currency_id" invisible="1" />
