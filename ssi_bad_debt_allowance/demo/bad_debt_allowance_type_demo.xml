@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2023 OpenSynergy Indonesia
+     Copyright 2023 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="demo_allowance_type" model="bad_debt_allowance_type">
+        <field name="name">Normal - (test)</field>
+        <field name="code">XBDA001</field>
+        <field name="journal_id" ref="demo_allowance_journal" />
+        <field name="allowance_account_id" ref="demo_allowance_account" />
+        <field name="expense_account_id" ref="demo_expense_account" />
+        <field
+            name="allowed_account_ids"
+            eval="[(6, 0, [ref('l10n_generic_coa.1_receivable')])]"
+        />
+        <field name="use_min_days_due" eval="False" />
+        <field name="use_max_days_due" eval="False" />
+        <field name="min_days_due" eval="0" />
+        <field name="max_days_due" eval="0" />
+    </record>
+    <record
+        id="demo_allowance_type_percentage"
+        model="bad_debt_allowance_type.percentage"
+    >
+        <field name="type_id" ref="demo_allowance_type" />
+        <field name="min_day_overdue" eval="0" />
+        <field name="max_day_overdue" eval="99999" />
+        <field name="percentage" eval="50.0" />
+    </record>
+    <record id="demo_allowance_type_min_max" model="bad_debt_allowance_type">
+        <field name="name">With Min Max - (test)</field>
+        <field name="code">XBDA002</field>
+        <field name="journal_id" ref="demo_allowance_journal" />
+        <field name="allowance_account_id" ref="demo_allowance_account" />
+        <field name="expense_account_id" ref="demo_expense_account" />
+        <field
+            name="allowed_account_ids"
+            eval="[(6, 0, [ref('l10n_generic_coa.1_receivable')])]"
+        />
+        <field name="use_min_days_due" eval="True" />
+        <field name="use_max_days_due" eval="True" />
+        <field name="min_days_due" eval="30" />
+        <field name="max_days_due" eval="365" />
+    </record>
+</odoo>

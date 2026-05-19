@@ -1,0 +1,361 @@
+scenarios:
+  - name: "Bad Debt Allowance Type - Master Data Creation"
+    steps:
+      - step: "Create bad debt allowance type"
+        action: "create"
+        model: "bad_debt_allowance_type"
+        save_as: "allowance_type"
+        values:
+          name: "Test Allowance Type"
+          code: "XTBDA001"
+          journal_id: "ssi_bad_debt_allowance.demo_allowance_journal"
+          allowance_account_id: "ssi_bad_debt_allowance.demo_allowance_account"
+          expense_account_id: "ssi_bad_debt_allowance.demo_expense_account"
+          use_min_days_due: false
+          use_max_days_due: false
+          min_days_due: 0
+          max_days_due: 0
+
+      - step: "Assert type created"
+        action: "assert"
+        target: "allowance_type"
+        asserts:
+          name:
+            type: "value"
+            expected: "Test Allowance Type"
+          code:
+            type: "value"
+            expected: "XTBDA001"
+
+      - step: "Create percentage for type"
+        action: "create"
+        model: "bad_debt_allowance_type.percentage"
+        save_as: "percentage"
+        values:
+          type_id: "EVAL: registry['allowance_type'].id"
+          min_day_overdue: 0
+          max_day_overdue: 365
+          percentage: 25.0
+
+      - step: "Assert percentage created"
+        action: "assert"
+        target: "percentage"
+        asserts:
+          percentage:
+            type: "value"
+            expected: 25.0
+          min_day_overdue:
+            type: "value"
+            expected: 0.0
+          max_day_overdue:
+            type: "value"
+            expected: 365.0
+
+      - step: "Deactivate type"
+        action: "write"
+        target: "allowance_type"
+        values:
+          active: false
+
+      - step: "Assert type inactive"
+        action: "assert"
+        target: "allowance_type"
+        asserts:
+          active:
+            type: "value"
+            expected: false
+
+  - name: "Bad Debt Allowance - Full Workflow: draft to done"
+    steps:
+      - step: "Setup - create partner"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDA"
+
+      - step: "Setup - create source journal entry"
+        action: "create"
+        model: "account.move"
+        save_as: "source_move"
+        values:
+          move_type: "entry"
+          journal_id: "ssi_bad_debt_allowance.demo_allowance_journal"
+          date: "2020-01-01"
+          line_ids:
+            - - 0
+              - 0
+              - account_id: "REF: l10n_generic_coa.1_receivable"
+                partner_id: "EVAL: registry['partner'].id"
+                debit: 1000.0
+                credit: 0.0
+                date_maturity: "2020-01-15"
+                name: "Test receivable line"
+            - - 0
+              - 0
+              - account_id: "REF: ssi_bad_debt_allowance.demo_income_account"
+                debit: 0.0
+                credit: 1000.0
+                name: "Test income line"
+
+      - step: "Post source journal entry"
+        action: "call"
+        target: "source_move"
+        method: "action_post"
+        as_user: "base.user_admin"
+
+      - step: "Get source receivable move line"
+        action: "search"
+        model: "account.move.line"
+        domain:
+          - ["move_id", "=", "EVAL: registry['source_move'].id"]
+          - ["account_id", "=", "REF: l10n_generic_coa.1_receivable"]
+        save_as: "source_line"
+        limit: 1
+
+      - step: "Create bad debt allowance"
+        action: "create"
+        model: "bad_debt_allowance"
+        save_as: "allowance"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_allowance.demo_allowance_type"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_allowance.demo_allowance_journal"
+          allowance_account_id: "ssi_bad_debt_allowance.demo_allowance_account"
+          expense_account_id: "ssi_bad_debt_allowance.demo_expense_account"
+
+      - step: "Assert allowance created in draft"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+      - step: "Create detail record manually"
+        action: "create"
+        model: "bad_debt_allowance.detail"
+        save_as: "allowance_detail"
+        values:
+          bad_debt_id: "EVAL: registry['allowance'].id"
+          source_move_line_id: "EVAL: registry['source_line'].id"
+          days_overdue: 1200
+          amount_residual: 1000.0
+          amount_residual_currency: 1000.0
+          allowance_percentage: 50.0
+
+      - step: "Assert detail created"
+        action: "assert"
+        target: "allowance_detail"
+        asserts:
+          allowance_percentage:
+            type: "value"
+            expected: 50.0
+
+      - step: "Invalidate cache after detail creation"
+        action: "call"
+        target: "allowance"
+        method: "invalidate_cache"
+
+      - step: "Confirm allowance"
+        action: "call"
+        target: "allowance"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Invalidate cache after confirm"
+        action: "call"
+        target: "allowance"
+        method: "invalidate_cache"
+
+      - step: "Approve allowance"
+        action: "call"
+        target: "allowance"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after approve"
+        action: "call"
+        target: "allowance"
+        method: "invalidate_cache"
+
+      - step: "Assert allowance done"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          state:
+            type: "value"
+            expected: "done"
+
+      - step: "Assert accounting entry created"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_truthy"
+            expected: true
+
+  - name: "Bad Debt Allowance - Cancel and Restart Flow"
+    steps:
+      - step: "Setup - create partner for cancel test"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDA Cancel"
+
+      - step: "Create bad debt allowance"
+        action: "create"
+        model: "bad_debt_allowance"
+        save_as: "allowance"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_allowance.demo_allowance_type"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_allowance.demo_allowance_journal"
+          allowance_account_id: "ssi_bad_debt_allowance.demo_allowance_account"
+          expense_account_id: "ssi_bad_debt_allowance.demo_expense_account"
+
+      - step: "Assert created in draft"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+      - step: "Confirm allowance"
+        action: "call"
+        target: "allowance"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Cancel allowance"
+        action: "call"
+        target: "allowance"
+        method: "action_cancel"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after cancel"
+        action: "call"
+        target: "allowance"
+        method: "invalidate_cache"
+
+      - step: "Assert cancelled"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          state:
+            type: "value"
+            expected: "cancel"
+
+      - step: "Restart allowance"
+        action: "call"
+        target: "allowance"
+        method: "action_restart"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after restart"
+        action: "call"
+        target: "allowance"
+        method: "invalidate_cache"
+
+      - step: "Assert restarted to draft"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+  - name: "Bad Debt Allowance - Action Populate"
+    steps:
+      - step: "Setup - create partner for populate test"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDA Populate"
+
+      - step: "Create bad debt allowance for populate"
+        action: "create"
+        model: "bad_debt_allowance"
+        save_as: "allowance"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_allowance.demo_allowance_type"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_allowance.demo_allowance_journal"
+          allowance_account_id: "ssi_bad_debt_allowance.demo_allowance_account"
+          expense_account_id: "ssi_bad_debt_allowance.demo_expense_account"
+
+      - step: "Call action_populate (no matching lines)"
+        action: "call"
+        target: "allowance"
+        method: "action_populate"
+        as_user: "base.user_admin"
+
+      - step: "Assert detail_ids empty"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          detail_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 0
+
+  - name: "Bad Debt Allowance - Action Populate With Min Max Days"
+    steps:
+      - step: "Setup - create partner for min max populate"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDA MinMax"
+
+      - step: "Create allowance with min/max type"
+        action: "create"
+        model: "bad_debt_allowance"
+        save_as: "allowance"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_allowance.demo_allowance_type_min_max"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_allowance.demo_allowance_journal"
+          allowance_account_id: "ssi_bad_debt_allowance.demo_allowance_account"
+          expense_account_id: "ssi_bad_debt_allowance.demo_expense_account"
+
+      - step: "Call action_populate with min/max type (no matching lines)"
+        action: "call"
+        target: "allowance"
+        method: "action_populate"
+        as_user: "base.user_admin"
+
+      - step: "Assert detail_ids empty for min/max type"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          detail_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 0
