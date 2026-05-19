@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2023 OpenSynergy Indonesia
+     Copyright 2023 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="demo_allowance_account" model="account.account">
+        <field name="name">Bad Debt Allowance Account - (test)</field>
+        <field name="code">XBDA01</field>
+        <field
+            name="user_type_id"
+            ref="account.data_account_type_current_liabilities"
+        />
+        <field name="internal_type">other</field>
+    </record>
+    <record id="demo_expense_account" model="account.account">
+        <field name="name">Bad Debt Allowance Expense - (test)</field>
+        <field name="code">XBDA02</field>
+        <field name="user_type_id" ref="account.data_account_type_expenses" />
+        <field name="internal_type">other</field>
+    </record>
+    <record id="demo_income_account" model="account.account">
+        <field name="name">Bad Debt Allowance Income - (test)</field>
+        <field name="code">XBDA03</field>
+        <field name="user_type_id" ref="account.data_account_type_revenue" />
+        <field name="internal_type">other</field>
+    </record>
+</odoo>

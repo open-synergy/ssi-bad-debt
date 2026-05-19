@@ -21,34 +21,46 @@ class BadDebtAllowanceDetail(models.Model):
         required=True,
         ondelete="restrict",
     )
-    date = fields.Date(string="Date", related="source_move_line_id.date", store=True)
+    date = fields.Date(
+        string="Date", related="source_move_line_id.date", store=True, compute_sudo=True
+    )
     date_due = fields.Date(
-        string="Date Due", related="source_move_line_id.date_maturity", store=True
+        string="Date Due",
+        related="source_move_line_id.date_maturity",
+        store=True,
+        compute_sudo=True,
     )
     day_due = fields.Integer(
-        string="Day Due", related="source_move_line_id.days_overdue", store=True
+        string="Day Due",
+        related="source_move_line_id.days_overdue",
+        store=True,
+        compute_sudo=True,
     )
     days_overdue = fields.Integer(string="Days Over Due", readonly=True)
     company_currency_id = fields.Many2one(
         string="Company Currency",
         related="bad_debt_id.company_id.currency_id",
         store=True,
+        compute_sudo=True,
     )
     currency_id = fields.Many2one(
         string="Currency",
         related="source_move_line_id.currency_id",
         store=True,
+        compute_sudo=True,
     )
     amount = fields.Monetary(
         string="Amount",
         currency_field="company_currency_id",
         related="source_move_line_id.balance",
+        compute_sudo=True,
     )
     amount_currency = fields.Monetary(
         string="Amount Currency",
         currency_field="currency_id",
         related="source_move_line_id.amount_currency",
         store=True,
+        compute_sudo=True,
     )
     amount_residual = fields.Monetary(
         string="Amount Residual", currency_field="company_currency_id", readonly=True
@@ -64,12 +76,14 @@ class BadDebtAllowanceDetail(models.Model):
         currency_field="company_currency_id",
         compute="_compute_allowance",
         store=True,
+        compute_sudo=True,
     )
     amount_allowance_currency = fields.Monetary(
         string="Amount Allowance Currency",
         currency_field="currency_id",
         compute="_compute_allowance",
         store=True,
+        compute_sudo=True,
     )
     allowance_move_line_id = fields.Many2one(
         string="Allowance Move Line",
