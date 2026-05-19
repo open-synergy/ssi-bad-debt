@@ -1,0 +1,562 @@
+scenarios:
+  - name: "Bad Debt Direct Write Off Type - Master Data Creation"
+    steps:
+      - step: "Create bad debt write off type"
+        action: "create"
+        model: "bad_debt_direct_write_off_type"
+        save_as: "write_off_type"
+        values:
+          name: "Test Write Off Type"
+          code: "XTBDW001"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+          use_min_days_due: false
+          use_max_days_due: false
+          min_days_due: 0
+          max_days_due: 0
+
+      - step: "Assert type created"
+        action: "assert"
+        target: "write_off_type"
+        asserts:
+          name:
+            type: "value"
+            expected: "Test Write Off Type"
+          code:
+            type: "value"
+            expected: "XTBDW001"
+
+      - step: "Create type with min/max days"
+        action: "create"
+        model: "bad_debt_direct_write_off_type"
+        save_as: "write_off_type_minmax"
+        values:
+          name: "Test Write Off Type Min Max"
+          code: "XTBDW002"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+          use_min_days_due: true
+          use_max_days_due: true
+          min_days_due: 30
+          max_days_due: 365
+
+      - step: "Assert min/max type created"
+        action: "assert"
+        target: "write_off_type_minmax"
+        asserts:
+          use_min_days_due:
+            type: "value"
+            expected: true
+          use_max_days_due:
+            type: "value"
+            expected: true
+          min_days_due:
+            type: "value"
+            expected: 30
+          max_days_due:
+            type: "value"
+            expected: 365
+
+      - step: "Deactivate type"
+        action: "write"
+        target: "write_off_type"
+        values:
+          active: false
+
+      - step: "Assert type inactive"
+        action: "assert"
+        target: "write_off_type"
+        asserts:
+          active:
+            type: "value"
+            expected: false
+
+  - name: "Bad Debt Direct Write Off - Full Workflow: draft to done"
+    steps:
+      - step: "Setup - create partner"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDW"
+
+      - step: "Setup - create source journal entry"
+        action: "create"
+        model: "account.move"
+        save_as: "source_move"
+        values:
+          move_type: "entry"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          date: "2020-01-01"
+          line_ids:
+            - - 0
+              - 0
+              - account_id: "REF: l10n_generic_coa.1_receivable"
+                partner_id: "EVAL: registry['partner'].id"
+                debit: 500.0
+                credit: 0.0
+                date_maturity: "2020-01-15"
+                name: "Test receivable write off"
+            - - 0
+              - 0
+              - account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+                debit: 0.0
+                credit: 500.0
+                name: "Test expense line"
+
+      - step: "Post source journal entry"
+        action: "call"
+        target: "source_move"
+        method: "action_post"
+        as_user: "base.user_admin"
+
+      - step: "Get source receivable move line"
+        action: "search"
+        model: "account.move.line"
+        domain:
+          - ["move_id", "=", "EVAL: registry['source_move'].id"]
+          - ["account_id", "=", "REF: l10n_generic_coa.1_receivable"]
+        save_as: "source_line"
+        limit: 1
+
+      - step: "Create bad debt direct write off"
+        action: "create"
+        model: "bad_debt_direct_write_off"
+        save_as: "write_off"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_type_demo1"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+
+      - step: "Assert write off created in draft"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+      - step: "Create detail record manually"
+        action: "create"
+        model: "bad_debt_direct_write_off.detail"
+        save_as: "write_off_detail"
+        values:
+          bad_debt_id: "EVAL: registry['write_off'].id"
+          source_move_line_id: "EVAL: registry['source_line'].id"
+          amount_residual: 500.0
+          amount_residual_currency: 500.0
+
+      - step: "Assert detail created"
+        action: "assert"
+        target: "write_off_detail"
+        asserts:
+          amount_residual:
+            type: "value"
+            expected: 500.0
+
+      - step: "Invalidate cache after detail creation"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Confirm write off"
+        action: "call"
+        target: "write_off"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Invalidate cache after confirm"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Approve write off"
+        action: "call"
+        target: "write_off"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after approve"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Assert write off done"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          state:
+            type: "value"
+            expected: "done"
+
+      - step: "Assert accounting entry created"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_truthy"
+            expected: true
+
+  - name: "Bad Debt Direct Write Off - Cancel after done and restart"
+    steps:
+      - step: "Setup - create partner for cancel test"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDW Cancel"
+
+      - step: "Setup - create source journal entry for cancel"
+        action: "create"
+        model: "account.move"
+        save_as: "source_move"
+        values:
+          move_type: "entry"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          date: "2020-01-01"
+          line_ids:
+            - - 0
+              - 0
+              - account_id: "REF: l10n_generic_coa.1_receivable"
+                partner_id: "EVAL: registry['partner'].id"
+                debit: 300.0
+                credit: 0.0
+                date_maturity: "2020-01-15"
+                name: "Test receivable cancel"
+            - - 0
+              - 0
+              - account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+                debit: 0.0
+                credit: 300.0
+                name: "Test expense cancel"
+
+      - step: "Post source journal entry"
+        action: "call"
+        target: "source_move"
+        method: "action_post"
+        as_user: "base.user_admin"
+
+      - step: "Get source line"
+        action: "search"
+        model: "account.move.line"
+        domain:
+          - ["move_id", "=", "EVAL: registry['source_move'].id"]
+          - ["account_id", "=", "REF: l10n_generic_coa.1_receivable"]
+        save_as: "source_line"
+        limit: 1
+
+      - step: "Create bad debt direct write off for cancel"
+        action: "create"
+        model: "bad_debt_direct_write_off"
+        save_as: "write_off"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_type_demo1"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+
+      - step: "Create detail for cancel test"
+        action: "create"
+        model: "bad_debt_direct_write_off.detail"
+        save_as: "write_off_detail"
+        values:
+          bad_debt_id: "EVAL: registry['write_off'].id"
+          source_move_line_id: "EVAL: registry['source_line'].id"
+          amount_residual: 300.0
+          amount_residual_currency: 300.0
+
+      - step: "Confirm"
+        action: "call"
+        target: "write_off"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Approve to done"
+        action: "call"
+        target: "write_off"
+        method: "action_approve_approval"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after done"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Assert done"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          state:
+            type: "value"
+            expected: "done"
+
+      - step: "Cancel write off"
+        action: "call"
+        target: "write_off"
+        method: "action_cancel"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after cancel"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Assert cancelled"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          state:
+            type: "value"
+            expected: "cancel"
+
+      - step: "Assert move_id cleared after cancel"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          move_id:
+            type: "value"
+            operator: "is_falsy"
+            expected: false
+
+      - step: "Restart write off"
+        action: "call"
+        target: "write_off"
+        method: "action_restart"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after restart"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Assert restarted to draft"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+  - name: "Bad Debt Direct Write Off - Confirm Cancel Restart (no accounting entry)"
+    steps:
+      - step: "Setup - create partner"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDW NoAcct"
+
+      - step: "Create bad debt direct write off"
+        action: "create"
+        model: "bad_debt_direct_write_off"
+        save_as: "write_off"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_type_demo1"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+
+      - step: "Confirm"
+        action: "call"
+        target: "write_off"
+        method: "action_confirm"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+        asserts:
+          state:
+            type: "value"
+            expected: "confirm"
+
+      - step: "Cancel from confirm (no accounting entry)"
+        action: "call"
+        target: "write_off"
+        method: "action_cancel"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Assert cancelled"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          state:
+            type: "value"
+            expected: "cancel"
+
+      - step: "Restart"
+        action: "call"
+        target: "write_off"
+        method: "action_restart"
+        as_user: "base.user_admin"
+        context:
+          bypass_policy_check: true
+
+      - step: "Invalidate cache after restart"
+        action: "call"
+        target: "write_off"
+        method: "invalidate_cache"
+
+      - step: "Assert draft"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          state:
+            type: "value"
+            expected: "draft"
+
+  - name: "Bad Debt Direct Write Off - Action Populate"
+    steps:
+      - step: "Setup - create partner for populate"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDW Populate"
+
+      - step: "Create write off for populate test"
+        action: "create"
+        model: "bad_debt_direct_write_off"
+        save_as: "write_off"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_type_demo1"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+
+      - step: "Call action_populate (no matching lines)"
+        action: "call"
+        target: "write_off"
+        method: "action_populate"
+        as_user: "base.user_admin"
+
+      - step: "Assert detail_ids empty"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          detail_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 0
+
+  - name: "Bad Debt Direct Write Off - Action Populate With Min Max Days"
+    steps:
+      - step: "Setup - create partner for min max populate"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Partner BDW MinMax"
+
+      - step: "Create type with min only"
+        action: "create"
+        model: "bad_debt_direct_write_off_type"
+        save_as: "type_min_only"
+        values:
+          name: "Test Type Min Only"
+          code: "XTBDW003"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+          use_min_days_due: true
+          use_max_days_due: false
+          min_days_due: 30
+          max_days_due: 0
+
+      - step: "Create write off with min-only type"
+        action: "create"
+        model: "bad_debt_direct_write_off"
+        save_as: "write_off"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "EVAL: registry['type_min_only'].id"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+
+      - step: "Call action_populate with min-only type"
+        action: "call"
+        target: "write_off"
+        method: "action_populate"
+        as_user: "base.user_admin"
+
+      - step: "Assert detail_ids empty for min-only"
+        action: "assert"
+        target: "write_off"
+        asserts:
+          detail_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 0
+
+      - step: "Create type with max only"
+        action: "create"
+        model: "bad_debt_direct_write_off_type"
+        save_as: "type_max_only"
+        values:
+          name: "Test Type Max Only"
+          code: "XTBDW004"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+          use_min_days_due: false
+          use_max_days_due: true
+          min_days_due: 0
+          max_days_due: 365
+
+      - step: "Create write off with max-only type"
+        action: "create"
+        model: "bad_debt_direct_write_off"
+        save_as: "write_off_max"
+        as_user: "base.user_admin"
+        values:
+          date: "2023-06-01"
+          type_id: "EVAL: registry['type_max_only'].id"
+          partner_id: "EVAL: registry['partner'].id"
+          journal_id: "ssi_bad_debt_direct_write_off.demo_journal1"
+          expense_account_id: "REF: ssi_bad_debt_direct_write_off.demo_account1"
+
+      - step: "Call action_populate with max-only type"
+        action: "call"
+        target: "write_off_max"
+        method: "action_populate"
+        as_user: "base.user_admin"
+
+      - step: "Assert detail_ids empty for max-only"
+        action: "assert"
+        target: "write_off_max"
+        asserts:
+          detail_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 0
