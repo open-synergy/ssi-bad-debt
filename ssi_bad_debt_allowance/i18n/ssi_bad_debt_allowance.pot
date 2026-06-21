@@ -390,6 +390,7 @@ msgstr ""
 #. module: ssi_bad_debt_allowance
 #: model:ir.model.fields,field_description:ssi_bad_debt_allowance.field_bad_debt_allowance__date
 #: model:ir.model.fields,field_description:ssi_bad_debt_allowance.field_bad_debt_allowance_detail__date
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_allowance.bad_debt_allowance_view_search
 msgid "Date"
 msgstr ""
 
@@ -512,6 +513,7 @@ msgstr ""
 #. module: ssi_bad_debt_allowance
 #: model:ir.model.fields,field_description:ssi_bad_debt_allowance.field_bad_debt_allowance__journal_id
 #: model:ir.model.fields,field_description:ssi_bad_debt_allowance.field_bad_debt_allowance_type__journal_id
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_allowance.bad_debt_allowance_view_search
 msgid "Journal"
 msgstr ""
 
@@ -695,6 +697,7 @@ msgstr ""
 
 #. module: ssi_bad_debt_allowance
 #: model:ir.model.fields,field_description:ssi_bad_debt_allowance.field_bad_debt_allowance__partner_id
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_allowance.bad_debt_allowance_view_search
 msgid "Partner"
 msgstr ""
 
@@ -826,6 +829,7 @@ msgstr ""
 #. module: ssi_bad_debt_allowance
 #: model:ir.model.fields,field_description:ssi_bad_debt_allowance.field_bad_debt_allowance__type_id
 #: model:ir.model.fields,field_description:ssi_bad_debt_allowance.field_bad_debt_allowance_type_percentage__type_id
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_allowance.bad_debt_allowance_view_search
 msgid "Type"
 msgstr ""
 
