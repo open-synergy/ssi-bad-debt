@@ -318,6 +318,7 @@ msgstr ""
 #. module: ssi_bad_debt_direct_write_off
 #: model:ir.model.fields,field_description:ssi_bad_debt_direct_write_off.field_bad_debt_direct_write_off__date
 #: model:ir.model.fields,field_description:ssi_bad_debt_direct_write_off.field_bad_debt_direct_write_off_detail__date
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_view_search
 msgid "Date"
 msgstr ""
 
@@ -438,6 +439,7 @@ msgstr ""
 #. module: ssi_bad_debt_direct_write_off
 #: model:ir.model.fields,field_description:ssi_bad_debt_direct_write_off.field_bad_debt_direct_write_off__journal_id
 #: model:ir.model.fields,field_description:ssi_bad_debt_direct_write_off.field_bad_debt_direct_write_off_type__journal_id
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_view_search
 msgid "Journal"
 msgstr ""
 
@@ -607,6 +609,7 @@ msgstr ""
 
 #. module: ssi_bad_debt_direct_write_off
 #: model:ir.model.fields,field_description:ssi_bad_debt_direct_write_off.field_bad_debt_direct_write_off__partner_id
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_view_search
 msgid "Partner"
 msgstr ""
 
@@ -717,6 +720,7 @@ msgstr ""
 
 #. module: ssi_bad_debt_direct_write_off
 #: model:ir.model.fields,field_description:ssi_bad_debt_direct_write_off.field_bad_debt_direct_write_off__type_id
+#: model_terms:ir.ui.view,arch_db:ssi_bad_debt_direct_write_off.bad_debt_direct_write_off_view_search
 msgid "Type"
 msgstr ""
 
