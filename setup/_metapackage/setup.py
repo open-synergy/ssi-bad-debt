@@ -9,6 +9,7 @@ setuptools.setup(
     version=version,
     install_requires=[
         'odoo14-addon-ssi_bad_debt_allowance',
+        'odoo14-addon-ssi_bad_debt_allowance_operating_unit',
         'odoo14-addon-ssi_bad_debt_direct_write_off',
     ],
     classifiers=[
