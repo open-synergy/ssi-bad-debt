@@ -11,6 +11,7 @@ setuptools.setup(
         'odoo14-addon-ssi_bad_debt_allowance',
         'odoo14-addon-ssi_bad_debt_allowance_operating_unit',
         'odoo14-addon-ssi_bad_debt_direct_write_off',
+        'odoo14-addon-ssi_bad_debt_direct_write_off_operating_unit',
     ],
     classifiers=[
         'Programming Language :: Python',
