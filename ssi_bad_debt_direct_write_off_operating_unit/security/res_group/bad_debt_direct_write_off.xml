@@ -7,7 +7,7 @@
     <field name="name">Operating Unit</field>
     <field
             name="category_id"
-            ref="ssi_bad_debt_direct_write_off.bad_debt_data_ownership_module_category"
+            ref="ssi_financial_accounting.financial_accounting_data_ownership_module_category"
         />
 </record>
 
