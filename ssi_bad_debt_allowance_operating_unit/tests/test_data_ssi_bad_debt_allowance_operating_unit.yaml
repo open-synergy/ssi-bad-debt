@@ -1,0 +1,90 @@
+scenarios:
+  - name: "Bad Debt Allowance - Operating Unit propagation"
+    steps:
+      - step: "Create partner"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Bad Debt Allowance OU Partner 1"
+          is_company: true
+
+      - step: "Create bad_debt_allowance with operating_unit_id"
+        action: "create"
+        model: "bad_debt_allowance"
+        save_as: "allowance"
+        values:
+          date: "2024-01-15"
+          partner_id: "REC: partner.id"
+          type_id: "REF: ssi_bad_debt_allowance.demo_allowance_type"
+          journal_id: "REF: ssi_bad_debt_allowance.demo_allowance_journal"
+          allowance_account_id: "REF: ssi_bad_debt_allowance.demo_allowance_account"
+          expense_account_id: "REF: ssi_bad_debt_allowance.demo_expense_account"
+          operating_unit_id: "REF: operating_unit.main_operating_unit"
+
+      - step: "Assert bad_debt_allowance operating_unit_id is set"
+        action: "assert"
+        target: "allowance"
+        asserts:
+          operating_unit_id:
+            type: "value"
+            operator: "is_truthy"
+
+  - name: "Bad Debt Allowance - ir.rule restricts access by operating unit"
+    steps:
+      - step: "Create partner"
+        action: "create"
+        model: "res.partner"
+        save_as: "partner"
+        values:
+          name: "Test Bad Debt Allowance OU Partner 2"
+          is_company: true
+
+      - step: "Create bad_debt_allowance with main operating unit"
+        action: "create"
+        model: "bad_debt_allowance"
+        save_as: "allowance"
+        values:
+          date: "2024-01-15"
+          partner_id: "REC: partner.id"
+          type_id: "REF: ssi_bad_debt_allowance.demo_allowance_type"
+          journal_id: "REF: ssi_bad_debt_allowance.demo_allowance_journal"
+          allowance_account_id: "REF: ssi_bad_debt_allowance.demo_allowance_account"
+          expense_account_id: "REF: ssi_bad_debt_allowance.demo_expense_account"
+          operating_unit_id: "REF: operating_unit.main_operating_unit"
+
+      - step: "Create user restricted to a different operating unit"
+        action: "create"
+        model: "res.users"
+        save_as: "restricted_user"
+        values:
+          name: "Restricted OU User"
+          login: "restricted_bad_debt_ou_user@example.com"
+          groups_id:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_bad_debt_allowance.bad_debt_allowance_user_group"
+                - "REF:
+                  ssi_bad_debt_allowance_operating_unit.bad_debt_allowance_ou_group"
+          assigned_operating_unit_ids:
+            - - 6
+              - 0
+              - - "REF: operating_unit.b2b_operating_unit"
+
+      - step: "Restricted user cannot see the record"
+        action: "search"
+        model: "bad_debt_allowance"
+        domain: [["id", "=", "REC: allowance.id"]]
+        save_as: "search_result"
+        as_user: "restricted_user"
+        expect_count: 0
+
+      - step: "Restricted user cannot write the record"
+        action: "write"
+        target: "allowance"
+        as_user: "restricted_user"
+        expect_error:
+          type: "AccessError"
+        values:
+          date: "2024-02-01"
